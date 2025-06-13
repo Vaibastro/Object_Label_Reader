@@ -1,20 +1,13 @@
 import cv2
 import pyttsx3
-import pytesseract
 from gtts import gTTS
 import os
 import time
+from google.cloud import vision
 
-#function to speak using gTTS
+# Add this line at the top of your script
+os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = 'google_key.json'
 
-
-
-#tesseract path
-pytesseract.pytesseract.tesseract_cmd = r"C:\Users\Arun JH\Desktop\VAIBHAVI\tesseract.exe"
-
-
-#initialize text-to-speech engine 
-engine = pyttsx3.init()
 
 
 #Load class Labels
@@ -22,9 +15,24 @@ classNames = [
      "background", "aeroplane", "bicycle", "bird", "boat",
     "bottle", "bus", "car", "cat", "chair", "cow", "diningtable",
     "dog", "horse", "motorbike", "person", "pottedplant",
-    "sheep", "sofa", "train", "tvmonitor"
+    "sheep", "sofa", "train", "tvmonitor", "book"
 ]
+# Initialize TTS engines
+engine = pyttsx3.init()
+vision_client = vision.ImageAnnotatorClient()
 
+# Helper: Speak text using gTTS
+def speak_text_gtts(text):
+    try:
+        tts = gTTS(text=text, lang='en')
+        filename = "temp.mp3"
+        tts.save(filename)
+        os.system(f"start {filename}")  # Windows
+        time.sleep(2)  # Wait to avoid overlap
+    except Exception as e:
+        print("Speech error:", e)
+
+#load object detection model
 net = cv2.dnn.readNetFromCaffe(
      "models/MobileNetSSD_deploy.prototxt.txt",
     "models/MobileNetSSD_deploy.caffemodel"
@@ -74,27 +82,17 @@ while True:
                 engine.runAndWait()
                 spoken_labels.add(label)
 
-    gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-    text = pytesseract.image_to_string(gray)
-    cleaned_text = ' '.join(text.strip().split())
+    success, encoded_image = cv2.imencode('.jpg', frame)
+    content = encoded_image.tobytes()
+    image = vision.Image(content=content)
+    response = vision_client.text_detection(image=image)
+    texts = response.text_annotations
 
-
-    def speak_text_gtts(text):
-
-        try:
-            tts= gTTS(text=text, lang='en')
-            filename = "temp.mp3"
-            tts.save(filename)
-            os.system(f"start {filename}")
-            time.sleep(2)  # wait for audioto play before continuing 
-        except Exception as e:
-            print("speech error:", e)  
-
-
-    if cleaned_text and len(cleaned_text) > 5:
-
-        print("Speaking:", cleaned_text)
-        speak_text_gtts("The text says: " + cleaned_text)
+    if texts:
+        cleaned_text = texts[0].description.strip()
+        if cleaned_text and len(cleaned_text) > 5:
+            print("Speaking:", cleaned_text)
+            speak_text_gtts("The text says: " + cleaned_text)
 
     cv2.imshow("AI reader:",frame)    
     if cv2.waitKey(1) & 0xFF == ord('q'):       #Pressing 'q' to quit and ord() will convert char 'q' into its ASCII value
