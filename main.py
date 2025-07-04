@@ -3,10 +3,10 @@ import pyttsx3
 from gtts import gTTS
 import os
 import time
-from google.cloud import vision
+# from google.cloud import vision
 
 # Add this line at the top of your script
-os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = 'google_key.json'
+#os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = 'google_key.json'
 
 
 
