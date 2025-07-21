@@ -153,29 +153,29 @@ class ProductLabelReader:
             if key == ord(' '):  # Spacebar to capture
                 self.speak("Scanning...")
                 
-                # Detect text regions
+                # Detecting text regions
                 text_regions = self.detect_text(frame)
                 
                 if text_regions:
-                    # Filter to find product name
+                    # Filtering to find product name
                     product_name = self.filter_product_name(text_regions)
                     
                     if product_name and product_name != "No product name found":
                         self.speak(f"Product: {product_name}")
                         
-                        # Debug info in console
+                        
                         print(f"All detected text regions: {len(text_regions)}")
-                        for i, region in enumerate(text_regions[:5]):  # Show first 5 for debugging
+                        for i, region in enumerate(text_regions[:5]):  
                             print(f"  {i+1}: {region['text']} (area: {region['area']})")
                     else:
                         self.speak("Could not identify product name. Try different angle or lighting.")
                 else:
                     self.speak("No text detected. Move closer to the product.")
                 
-                # Small delay to prevent accidental double-scans
+                # Small delay to prevent accidental 2nd-scans
                 time.sleep(1)
             
-            elif key == ord('q'):  # Quit
+            elif key == ord('q'):  #  Just Quit;-;
                 break
         
         # Cleanup
@@ -186,3 +186,4 @@ class ProductLabelReader:
 if __name__ == "__main__":
     reader = ProductLabelReader()
     reader.run()
+    
