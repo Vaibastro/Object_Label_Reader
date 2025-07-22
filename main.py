@@ -10,6 +10,8 @@ os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = r'C:\Users\Arun JH\Desktop\Object
 class ProductLabelReader:
     # Startup
     def __init__(self):
+        self.last_product_name = None
+
         # TTS engine
         self.engine = pyttsx3.init()
         self.engine.setProperty('rate', 150)  # Slower speech for blind users
@@ -175,8 +177,36 @@ class ProductLabelReader:
                 # Small delay to prevent accidental 2nd-scans
                 time.sleep(1)
             
-            elif key == ord('q'):  #  Just Quit;-;
-                break
+            elif key == ord(' '): 
+
+                 # SPACEBAR to scan
+                self.speak("Scanning...")
+
+                text_regions = self.detect_text(frame)
+
+                if text_regions:
+                    product_name = self.filter_product_name(text_regions)
+
+                    if product_name and product_name != "No product name found":
+                        self.speak(f"Product: {product_name}")
+                        self.last_product_name = product_name  # Save it!
+
+                        print(f"All detected text regions: {len(text_regions)}")
+                        for i, region in enumerate(text_regions[:5]):
+                            print(f"  {i+1}: {region['text']} (area: {region['area']})")
+                    else:
+                        self.speak("Could not identify product name. Try different angle or lighting.")
+                else:
+                    self.speak("No text detected. Move closer to the product.")
+
+                time.sleep(1)
+            elif key == ord('r'):  # R key to repeat last spoken name
+                if self.last_product_name:
+                    self.speak(f"Last product: {self.last_product_name}")
+                else:
+                    self.speak("No product scanned yet.")
+    
+
         
         # Cleanup
         cam.release()
